@@ -110,7 +110,7 @@ describe("TipChart – mode toggle", () => {
 
     // The summary is derived from the same series, so it stays meaningful
     // in both modes rather than collapsing when the unit changes.
-    expect(screen.getByText("$5.00")).toBeInTheDocument();
+    expect(screen.getByText("$5.00", { selector: "p" })).toBeInTheDocument();
   });
 });
 
