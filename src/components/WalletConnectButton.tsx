@@ -50,7 +50,6 @@ export function WalletConnectButton({ size = "md", className }: WalletConnectBut
         loading={isConnecting}
         className={className}
         onClick={connect}
-        aria-label="Connect Freighter wallet"
       >
         {isConnecting ? "Connecting…" : "Connect Wallet"}
       </Button>
