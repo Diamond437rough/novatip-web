@@ -61,9 +61,10 @@ function Toggle({ id, checked, disabled, onChange, label, description, badge }: 
 
       {/* The actual checkbox is visually hidden; the styled div acts as the
           visible indicator. Both are labelled via htmlFor/id above. */}
-      <div className="relative shrink-0 mt-0.5" aria-hidden="true">
+      <div className="relative shrink-0 mt-0.5">
         <input
           type="checkbox"
+          role="switch"
           id={id}
           checked={checked}
           disabled={disabled}
