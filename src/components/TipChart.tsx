@@ -409,3 +409,91 @@ export function TipChart({ jwt }: TipChartProps) {
     </Card>
   );
 }
+
+interface ChartPoint {
+  x: number;
+  y: number;
+  label?: string;
+}
+
+interface ChartSvgProps {
+  points: ChartPoint[];
+  pathD: string;
+}
+
+export const ChartSvg: React.FC<ChartSvgProps> = ({ points, pathD }) => {
+  return (
+    <div className="chart-svg-container">
+      <svg
+        viewBox="0 0 600 120"
+        preserveAspectRatio="none"
+        className="tip-chart-svg"
+      >
+        {/* Line path with non-scaling stroke so width stays constant when stretched */}
+        <path
+          d={pathD}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+          className="chart-line"
+        />
+
+        {/* Data dots with non-scaling stroke and constant rendering */}
+        {points.map((pt, idx) => (
+          <circle
+            key={idx}
+            cx={pt.x}
+            cy={pt.y}
+            r="3"
+            className="chart-dot"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+      </svg>
+    </div>
+  );
+};
+export interface TipDataPoint {
+  date: string;
+  amountRaw: string; // Raw stroop amount string
+}
+
+export function calculateTotalStroops(data: TipDataPoint[]): bigint {
+  return data.reduce((sum, item) => sum + BigInt(item.amountRaw || '0'), BigInt(0));
+}
+
+interface TipChartProps {
+  data: TipDataPoint[];
+}
+
+export const TipChart: React.FC<TipChartProps> = ({ data }) => {
+  // Compute exact total as BigInt
+  const totalStroops = calculateTotalStroops(data);
+
+  // Format exact total for display (e.g. converted to Lumens/XLM or formatted BigInt)
+  const formattedTotal = totalStroops.toString();
+
+  return (
+    <div className="tip-chart">
+      <div className="summary-row">
+        <span>Total Tips: {formattedTotal} stroops</span>
+      </div>
+
+      <div className="chart-bars">
+        {data.map((item, idx) => {
+          // Plotting retains approximate Number conversion for CSS height percentages
+          const plotValue = Number(BigInt(item.amountRaw));
+          return (
+            <div
+              key={idx}
+              className="chart-bar"
+              style={{ height: `${Math.min(plotValue / 1000, 100)}%` }}
+              title={`${item.date}: ${item.amountRaw} stroops`}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+};
