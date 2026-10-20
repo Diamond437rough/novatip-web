@@ -378,6 +378,66 @@ export function TipChart({ jwt }: TipChartProps) {
   );
 
 
+export type WindowDays = 7 | 30 | 90; // Renamed from Window to avoid shadowing DOM global type
+
+export interface TipDataPoint {
+  date: string;
+  amount: number;
+}
+
+export function fillSeries(data: TipDataPoint[], days: number): TipDataPoint[] {
+  const result: TipDataPoint[] = [];
+  const dataMap = new Map(data.map((item) => [item.date.slice(0, 10), item.amount]));
+
+  const now = new Date();
+  const utcNow = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+
+  for (let i = days - 1; i >= 0; i--) {
+    const targetTime = utcNow - i * 24 * 60 * 60 * 1000;
+    const d = new Date(targetTime);
+    const dateStr = d.toISOString().slice(0, 10);
+
+    result.push({
+      date: dateStr,
+      amount: dataMap.get(dateStr) || 0,
+    });
+  }
+
+  return result;
+}
+
+interface TipChartProps {
+  data: TipDataPoint[];
+}
+
+export const TipChart: React.FC<TipChartProps> = ({ data }) => {
+  // Renamed from [window, setWindow] to avoid shadowing global window
+  const [windowDays, setWindowDays] = useState<WindowDays>(30);
+  const filledData = fillSeries(data, windowDays);
+
+  return (
+    <div className="tip-chart-container">
+      <div className="chart-header">
+        <h3>Tip History</h3>
+        <div className="window-selector">
+          <button onClick={() => setWindowDays(7)} className={windowDays === 7 ? 'active' : ''}>7D</button>
+          <button onClick={() => setWindowDays(30)} className={windowDays === 30 ? 'active' : ''}>30D</button>
+          <button onClick={() => setWindowDays(90)} className={windowDays === 90 ? 'active' : ''}>90D</button>
+        </div>
+      </div>
+      <div className="chart-body">
+        <ul>
+          {filledData.map((pt) => (
+            <li key={pt.date}>
+              {pt.date}: ${pt.amount}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
 export function fillSeries(data: TipDataPoint[], days: number): TipDataPoint[] {
   const result: TipDataPoint[] = [];
   const dataMap = new Map(data.map((item) => [item.date.slice(0, 10), item.amount]));
