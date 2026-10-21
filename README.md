@@ -512,6 +512,95 @@ added to a split. The guard lives in `src/lib/trustline.ts`
 4. JWT stored in localStorage
 5. JWT attached to all authenticated API requests
 
+### Session token storage: localStorage and its tradeoffs
+
+The creator session JWT is stored in `localStorage` rather than an `httpOnly` cookie. This section documents why that choice was made and what security costs it carries.
+
+#### Why localStorage
+
+**Cross-origin architecture**
+
+The frontend (`novatip.xyz`) and backend API (`api.novatip.xyz`) are separate origins. An `httpOnly` cookie set by the API cannot be read by JavaScript (which is the security benefit), but it also cannot be sent with `fetch()` requests to the API unless:
+
+1. The API sets `Access-Control-Allow-Credentials: true`, **and**
+2. Every fetch includes `credentials: 'include'`, **and**
+3. The `Access-Control-Allow-Origin` response header is set to the exact frontend origin (wildcards are forbidden with credentials).
+
+This works, but it makes local development harder (every developer needs matching CORS config) and makes the API harder to use from other clients (mobile apps, CLI tools, third-party integrations). `localStorage` with a bearer token in the `Authorization` header has none of these constraints.
+
+**No server-side rendering for authenticated pages**
+
+The creator dashboard pages are client-side only (`"use client"` directive). There is no server component that needs to read the session to pre-render personalized HTML. If the session lived in an `httpOnly` cookie, the Next.js server still could not read it (the cookie is `httpOnly` precisely so JavaScript cannot), so SSR would not work anyway.
+
+Because the dashboard is always hydrated client-side, there is no SSR benefit to giving up the flexibility of `localStorage`.
+
+**The tip flow does not involve the session**
+
+Sending a tip is an on-chain transaction: the tipper signs it with their wallet and submits it directly to the Stellar network. The backend is not in that path — there is no API call, so there is no session token to protect. The session is only needed for creator-facing features (onboarding, splits, analytics), and those are behind wallet signature verification (SIWS) at sign-in time.
+
+A compromised session token lets an attacker read a creator's dashboard. It does **not** let them:
+- Steal funds (tips go to on-chain addresses, not to "whoever holds the session")
+- Change splits or claim a new slug (those endpoints re-verify the wallet signature)
+- Send tips on someone else's behalf (tips are signed by the sender's wallet, not by a session)
+
+The blast radius is dashboard read access, not write or financial access.
+
+#### Security costs
+
+**Script injection can read the token**
+
+Any script running on the page can call `localStorage.getItem("novatip_jwt")` and exfiltrate the session. This includes:
+
+- A compromised third-party script (analytics, ads, a supply-chain attack on a dependency)
+- A stored XSS vulnerability (if user input is ever rendered unescaped — this app does not render user HTML, but the risk is non-zero)
+- A browser extension with overly broad permissions
+
+An `httpOnly` cookie would be invisible to all of those, which is why it is the default recommendation for session tokens.
+
+**Mitigations in place:**
+
+1. **Short token expiry**: The JWT expires after a limited time (configured server-side). An exfiltrated token becomes useless once it expires, limiting the window for abuse.
+
+2. **No write operations without wallet re-verification**: Sensitive endpoints (claiming a slug, updating splits) require a fresh wallet signature, not just the session token. A stolen JWT grants read access to the dashboard but cannot change on-chain state or modify the creator's profile.
+
+3. **Server remains the authority**: The token's `exp` claim is checked client-side as a UX optimization (to skip a guaranteed-failing request), but the server validates every token on every request. A manipulated or forged token is rejected immediately.
+
+4. **Minimal third-party scripts**: The app includes no analytics, no ads, and no third-party scripts beyond the essential SDK and wallet libraries. The attack surface for script injection is kept small.
+
+5. **Content Security Policy (future work)**: A strict CSP would block inline scripts and restrict script sources to a known allowlist, further reducing XSS risk. This is not currently implemented but is planned.
+
+**What is not protected:**
+
+- If an attacker gains script execution on the page (via XSS or a compromised dependency), they can read the session token and any other `localStorage` data. This is the inherent cost of client-side storage.
+
+- A session token does not prove wallet ownership at request time — it proves it was owned at sign-in. If a creator's wallet is compromised separately (phishing, leaked seed phrase), the session token does not add protection, but it also does not make things worse (the attacker already has the wallet, which is the real credential).
+
+#### What limits the damage
+
+| Defense | What it prevents |
+|---------|-----------------|
+| Short token expiry | An exfiltrated token becomes useless after expiry (hours, not days or weeks) |
+| Wallet re-verification on writes | Stolen session cannot change splits, claim slugs, or modify on-chain state |
+| No financial access via session | Tips are on-chain transactions; session tokens do not control funds |
+| Server-side validation on every request | Forged or tampered tokens are rejected immediately |
+| Minimal third-party scripts | Reduces the number of scripts that could exfiltrate the token |
+
+#### The alternative: httpOnly cookies
+
+An `httpOnly` cookie would be invisible to scripts, eliminating the XSS exfiltration risk. The costs:
+
+- CORS complexity (see above)
+- No SSR benefit (the dashboard is client-only, and the cookie is `httpOnly`)
+- Harder to use from non-browser clients (mobile apps, CLI tools)
+- CSRF risk (though that can be mitigated with SameSite and CSRF tokens)
+
+The current choice prioritizes flexibility and simplicity over defense-in-depth against XSS. The tradeoff is acceptable because:
+1. The session grants only read access to the dashboard, not write or financial access.
+2. Write operations require fresh wallet signatures, not just the session.
+3. The token expires quickly, limiting the blast radius of a compromised session.
+
+If XSS defense becomes a higher priority (e.g., if the app begins rendering user-generated HTML, or if a security audit recommends it), switching to `httpOnly` cookies is a reversible decision. The backend already supports stateless JWT validation, so no server-side session store is needed — the cookie would carry the JWT just as `localStorage` does today.
+
 ## Theming
 
 Light and dark are driven by a `dark` class on `<html>` (Tailwind `darkMode: "class"`).
