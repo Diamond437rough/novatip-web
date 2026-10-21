@@ -662,6 +662,83 @@ If a test depends on `@novatip/sdk`, the stub at `src/test/mocks/novatip-sdk.ts`
 
 `npm test` runs as part of the GitHub Actions CI pipeline defined in `.github/workflows/ci.yml`, alongside lint, typecheck, and build steps.
 
+### The SDK test stub
+
+Tests run against a hand-maintained stub of `@novatip/sdk` located at `src/test/mocks/novatip-sdk.ts`. The stub exists because the real SDK depends on Node crypto APIs and Stellar transaction primitives that are difficult to run in a jsdom test environment.
+
+`vitest.config.mts` aliases `@novatip/sdk` to this stub, so every test import of the SDK resolves to the mock rather than the real package. The stub is **not automatically synchronized** with the real SDK — when the SDK's public interface changes, the stub must be updated by hand.
+
+#### What the stub provides
+
+The stub exports the following to match the real SDK's public API:
+
+| Export | Type | Purpose |
+|--------|------|---------|
+| `usdcToStroops` | function | Converts a USDC string to stroops (`1 USDC = 10_000_000 stroops`) |
+| `isValidTipAmount` | function | Validates a tip amount in stroops (`> 0` and `<= 1000 USDC`) |
+| `formatUsdc` | function | Formats stroops as a USDC decimal string |
+| `shortenAddress` | function | Abbreviates a Stellar address to `GABC…WXYZ` format |
+| `validateSplitsBps` | function | Validates that an array of basis points sums to exactly `10_000` |
+| `ContractErrorCode` | enum | Error codes mirroring the `tip_splitter` contract's `Error` enum |
+| `NovatipContractError` | class | SDK-level error wrapping a contract error code |
+| `Split` | interface | `{ to: string; bps: number }` |
+| `Jar` | interface | `{ owner: string; splits: Split[] }` |
+
+The stub intentionally omits blockchain interaction classes like `TipSplitterClient` and wallet signing helpers, since those are not unit-testable in isolation. Tests that need those behaviors should use `vi.mock('@novatip/sdk', ...)` to provide test doubles for the specific functions under test.
+
+#### When to update the stub
+
+Update the stub whenever you bump the SDK pin in `package.json` **and** the SDK's public API has changed. Common triggers:
+
+- A new helper function is added to the SDK and production code begins using it
+- An existing function's signature changes (new parameter, different return type)
+- `ContractErrorCode` gains or loses a variant because the contract's `Error` enum changed
+- Type definitions for `Split`, `Jar`, or other interfaces are modified
+
+**The stub does not need to match private SDK internals** — only the exports that production code actually imports.
+
+#### How to update the stub
+
+1. Identify which SDK exports changed by reviewing the commit that bumped the pin.
+2. Open `src/test/mocks/novatip-sdk.ts` and add, remove, or update the affected exports.
+3. Ensure the stub's behavior matches the real SDK's documented behavior (especially for validation functions like `isValidTipAmount` and `validateSplitsBps`).
+4. Run `npm test` to verify that existing tests still pass with the updated stub.
+5. If a test fails after updating the stub, the failure indicates either:
+   - The stub was changed incorrectly (fix the stub), or
+   - The production code depends on old SDK behavior and needs updating (fix the production code)
+
+**Do not introduce behavior that the real SDK does not have.** The stub exists to let tests run, not to add test-only features. If a test needs behavior the SDK does not provide, mock the SDK in that specific test file rather than polluting the shared stub.
+
+#### Example: Adding a new SDK export to the stub
+
+Suppose the SDK adds a new function `parseJarId` that extracts the slug from a jar ID:
+
+```ts
+// Real SDK: novatip-sdk/src/jar.ts
+export function parseJarId(jarId: string): string | null {
+  if (!jarId.startsWith('@')) return null;
+  return jarId.slice(1);
+}
+```
+
+After bumping the SDK pin and seeing production code import `parseJarId`, add it to the stub:
+
+```ts
+// src/test/mocks/novatip-sdk.ts
+export function parseJarId(jarId: string): string | null {
+  if (!jarId.startsWith('@')) return null;
+  return jarId.slice(1);
+}
+```
+
+Then verify the change:
+
+```bash
+npm test
+```
+
+If tests fail, inspect the failure to determine whether the stub's implementation matches the real SDK's behavior.
+
 ## Client-side architecture
 
 ### State layers
