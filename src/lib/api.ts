@@ -307,6 +307,14 @@ export const analyticsApi = {
       options,
       jwt,
     ),
+
+  collaborators: (jwt: string, options?: RequestOptions) =>
+    request<{
+      collaborators: Array<{
+        address: string;
+        totalAmountRaw: string;
+      }>;
+    }>("/analytics/collaborators", options, jwt),
 };
 
 // ── Notifications ─────────────────────────────────────────────────────────────
