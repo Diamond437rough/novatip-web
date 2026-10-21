@@ -365,4 +365,11 @@ export const webhookApi = {
 
   remove: (jwt: string, id: string, options?: RequestOptions) =>
     request<void>(`/webhooks/${id}`, { ...options, method: "DELETE" }, jwt),
+
+  ping: (jwt: string, id: string, options?: RequestOptions) =>
+    request<{ success: boolean; statusCode?: number; error?: string }>(
+      `/webhooks/${id}/ping`,
+      { ...options, method: "POST" },
+      jwt,
+    ),
 };
