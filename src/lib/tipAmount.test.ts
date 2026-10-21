@@ -1,4 +1,5 @@
-import { isValidPlainDecimal, isWithinTipCeiling, isLargeTip } from '../tipAmount';
+import { describe, expect, it } from "vitest";
+import { isValidPlainDecimal, isWithinTipCeiling, isLargeTip } from "./tipAmount";
 
 describe('Tip Amount Helpers (#205)', () => {
   describe('isValidPlainDecimal', () => {
@@ -24,13 +25,21 @@ describe('Tip Amount Helpers (#205)', () => {
 
   describe('isWithinTipCeiling & isLargeTip boundaries', () => {
     it('should correctly handle 100 and 1000 boundaries', () => {
-      expect(isWithinTipCeiling('1000', 1000)).toBe(true);
-      expect(isWithinTipCeiling('1001', 1000)).toBe(false);
-      expect(isWithinTipCeiling('-1', 1000)).toBe(false);
+      expect(isWithinTipCeiling('1000')).toBe(true);
+      expect(isWithinTipCeiling('1000.01')).toBe(false);
+      expect(isWithinTipCeiling('-1')).toBe(false);
 
-      expect(isLargeTip('100', 100)).toBe(true);
-      expect(isLargeTip('99', 100)).toBe(false);
-      expect(isLargeTip('1e2', 100)).toBe(false); // exponential rejected
+      expect(isLargeTip('100')).toBe(true);
+      expect(isLargeTip('99.99')).toBe(false);
+      expect(isLargeTip('1e2')).toBe(false); // exponential rejected
     });
+
+    it.each(['abc', '100usd', 'NaN', 'Infinity', '-Infinity', '', '   ', null, undefined, NaN])(
+      'rejects non-numeric input %s in both amount guards',
+      (amount) => {
+        expect(isWithinTipCeiling(amount)).toBe(false);
+        expect(isLargeTip(amount)).toBe(false);
+      },
+    );
   });
 });
