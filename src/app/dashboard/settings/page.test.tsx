@@ -85,7 +85,7 @@ describe("SettingsPage – rename button disabled until conditions met", () => {
 
     // Wait for page to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/new slug/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/new slug/i)).toBeEnabled();
     });
 
     const slugInput = screen.getByLabelText(/new slug/i);
@@ -110,7 +110,7 @@ describe("SettingsPage – rename button disabled until conditions met", () => {
 
     // Wait for page to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/new slug/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/new slug/i)).toBeEnabled();
     });
 
     const slugInput = screen.getByLabelText(/new slug/i);
@@ -139,7 +139,7 @@ describe("SettingsPage – rename button disabled until conditions met", () => {
 
     // Wait for page to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/new slug/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/new slug/i)).toBeEnabled();
     });
 
     const slugInput = screen.getByLabelText(/new slug/i);
@@ -164,7 +164,7 @@ describe("SettingsPage – rename button disabled until conditions met", () => {
 
     // Wait for page to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/new slug/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/new slug/i)).toBeEnabled();
     });
 
     const slugInput = screen.getByLabelText(/new slug/i);
@@ -193,7 +193,7 @@ describe("SettingsPage – current slug reported as unchanged", () => {
 
     // Wait for page to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/new slug/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/new slug/i)).toBeEnabled();
     });
 
     const slugInput = screen.getByLabelText(/new slug/i);
@@ -234,7 +234,7 @@ describe("SettingsPage – successful rename clears inputs and shows confirmatio
 
     // Wait for page to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/new slug/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/new slug/i)).toBeEnabled();
     });
 
     const slugInput = screen.getByLabelText(/new slug/i) as HTMLInputElement;
@@ -281,7 +281,7 @@ describe("SettingsPage – rename error handling", () => {
 
     // Wait for page to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/new slug/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/new slug/i)).toBeEnabled();
     });
 
     const slugInput = screen.getByLabelText(/new slug/i);
@@ -317,7 +317,7 @@ describe("SettingsPage – slug validation", () => {
 
     // Wait for page to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/new slug/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/new slug/i)).toBeEnabled();
     });
 
     const slugInput = screen.getByLabelText(/new slug/i) as HTMLInputElement;
@@ -334,7 +334,7 @@ describe("SettingsPage – slug validation", () => {
 
     // Wait for page to load
     await waitFor(() => {
-      expect(screen.getByLabelText(/new slug/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/new slug/i)).toBeEnabled();
     });
 
     const slugInput = screen.getByLabelText(/new slug/i) as HTMLInputElement;
