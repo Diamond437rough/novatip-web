@@ -19,20 +19,12 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { isValidHttpsUrl } from "@/lib/webhooks";
 
 interface Webhook {
   id:      string;
   url:     string;
   enabled: boolean;
-}
-
-export function isValidHttpsUrl(value: string): boolean {
-  try {
-    const u = new URL(value);
-    return u.protocol === "https:";
-  } catch {
-    return false;
-  }
 }
 
 export default function WebhooksPage() {
