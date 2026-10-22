@@ -190,4 +190,57 @@ describe("SplitBreakdown", () => {
     // Reset for other tests
     mockConfig.stellar.network = "testnet";
   });
+
+  it("has a copy control for each address", () => {
+    render(
+      <SplitBreakdown
+        splits={[
+          { to: CREATOR, bps: 7000 },
+          { to: COLLAB, bps: 3000 },
+        ]}
+      />,
+    );
+
+    const copyButtons = screen.getAllByRole("button");
+    expect(copyButtons).toHaveLength(2);
+    expect(copyButtons[0]).toHaveAccessibleName(`Copy full address ${CREATOR}`);
+    expect(copyButtons[1]).toHaveAccessibleName(`Copy full address ${COLLAB}`);
+  });
+
+  it("copies the full address when the copy button is clicked", async () => {
+    const user = userEvent.setup();
+    mockClipboard.writeText.mockResolvedValue(undefined);
+
+    render(
+      <SplitBreakdown
+        splits={[
+          { to: CREATOR, bps: 10000 },
+        ]}
+      />,
+    );
+
+    const copyButton = screen.getByRole("button", { name: `Copy full address ${CREATOR}` });
+    await user.click(copyButton);
+
+    expect(mockClipboard.writeText).toHaveBeenCalledWith(CREATOR);
+    expect(copyButton).toHaveAccessibleName("Full address copied");
+  });
+
+  it("shows an error state when copy fails", async () => {
+    const user = userEvent.setup();
+    mockClipboard.writeText.mockRejectedValue(new Error("Clipboard denied"));
+
+    render(
+      <SplitBreakdown
+        splits={[
+          { to: CREATOR, bps: 10000 },
+        ]}
+      />,
+    );
+
+    const copyButton = screen.getByRole("button", { name: `Copy full address ${CREATOR}` });
+    await user.click(copyButton);
+
+    expect(copyButton).toHaveAccessibleName("Couldn't copy address — try again");
+  });
 });
