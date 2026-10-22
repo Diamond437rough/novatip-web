@@ -31,6 +31,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
+import { NotificationPreferences } from "@/components/NotificationPreferences";
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
@@ -440,6 +441,9 @@ export default function SettingsPage() {
           )}
         </Card>
       </form>
+
+      {/* ── Notification preferences ───────────────────────────────────────── */}
+      {jwt && creator && <NotificationPreferences jwt={jwt} />}
 
       {/* ── Public link ────────────────────────────────────────────────────── */}
       <Card>
