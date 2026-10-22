@@ -91,15 +91,16 @@ describe("SettingsPage – rename button disabled until conditions met", () => {
     const slugInput = screen.getByLabelText(/new slug/i);
     const checkbox = screen.getByRole("checkbox");
     
-    // Type an invalid slug (has uppercase letters)
-    await userEvent.type(slugInput, "InvalidSlug");
+    // A two-character slug stays invalid after input normalization.
+    await userEvent.type(slugInput, "ab");
 
     // Check the acknowledgement
     await userEvent.click(checkbox);
 
     // Button should still be disabled because slug is invalid
-    const renameButton = screen.getByRole("button", { name: /rename to @invalid-slug/i });
+    const renameButton = screen.getByRole("button", { name: /rename to @ab$/i });
     expect(renameButton).toBeDisabled();
+    expect(mockCreatorApi.checkSlug).not.toHaveBeenCalled();
   });
 
   it("keeps the button disabled when slug is not available", async () => {
