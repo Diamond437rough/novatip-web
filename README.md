@@ -371,12 +371,49 @@ required for any new collaborator account before it can appear in a split.
 
 ## Key Pages
 
-/                   - Home landing page
-/[slug]             - Public tip page
-/onboarding         - Creator onboarding wizard
-/dashboard          - Creator earnings overview
-/dashboard/splits   - Collaborator splits manager
-/dashboard/qr       - QR code and share link
+This list reflects all routes under `src/app`. Each route is verified against
+the directory structure rather than written from memory.
+
+/                       - Home landing page
+/[slug]                 - Public tip page for a creator
+/onboarding             - Creator onboarding wizard
+/dashboard              - Creator earnings overview
+/dashboard/history      - Tip history and transaction log
+/dashboard/qr           - QR code and share link
+/dashboard/settings     - Profile and notification preferences
+/dashboard/splits       - Collaborator splits manager
+/dashboard/webhooks     - Webhook configuration and testing
+
+## Screen-to-endpoint mapping
+
+This table maps each screen to the backend API endpoints it calls. The mapping
+is derived from `src/lib/api.ts` (which defines all client methods) and the
+screen component files under `src/app`.
+
+Endpoints marked **[NOT IMPLEMENTED]** do not yet exist on the backend.
+
+| Screen | Endpoints called | Notes |
+|--------|------------------|-------|
+| `/` (home) | None | Static landing page |
+| `/[slug]` (tip page) | `GET /resolve/:slug` | Fetches creator profile, splits, and recent tips |
+| `/onboarding` | `GET /auth/me`<br>`GET /creators/:slug`<br>`POST /creators/claim` | Checks session, fetches existing creator data if resuming, claims slug |
+| `/dashboard` (overview) | `GET /auth/me`<br>`GET /creators/:slug`<br>`GET /analytics/totals` | Fetches creator profile and earnings summary |
+| `/dashboard/history` | `GET /analytics/recent` | Paginated tip history with offset |
+| `/dashboard/qr` | `GET /auth/me` | Fetches slug to generate QR code client-side |
+| `/dashboard/settings` | `GET /auth/me`<br>`GET /creators/:slug`<br>`PATCH /creators/me`<br>`PATCH /creators/me/slug`<br>`GET /creators/check/:slug` | Profile editing and slug rename |
+| `/dashboard/splits` | `GET /auth/me`<br>`GET /creators/:slug`<br>`PATCH /creators/me/splits` | Collaborator split configuration |
+| `/dashboard/webhooks` | `GET /webhooks` **[NOT IMPLEMENTED]**<br>`POST /webhooks` **[NOT IMPLEMENTED]**<br>`DELETE /webhooks/:id` **[NOT IMPLEMENTED]**<br>`POST /webhooks/:id/ping` **[NOT IMPLEMENTED]** | Webhook management UI is built but backend routes do not exist yet |
+
+### Authentication flow
+
+The SIWS (Sign-In With Stellar) flow is used across all authenticated screens:
+
+1. `POST /auth/challenge` — request a nonce for the wallet to sign
+2. Wallet signs the nonce (client-side, via Freighter)
+3. `POST /auth/verify` — exchange the signed nonce for a JWT
+
+The JWT is stored in `localStorage.novatip_jwt` and included in the
+`Authorization: Bearer <token>` header for all subsequent authenticated requests.
 
 ## Tip page URL shapes
 
@@ -467,6 +504,37 @@ The app is developed and tested against the following desktop browsers:
 Any browser that supports the Freighter extension and modern ES2020 features
 (optional chaining, nullish coalescing, `Promise.allSettled`) is expected to
 work. No IE11 or legacy-browser polyfills are included.
+
+---
+
+## Browser storage keys
+
+The app stores the following keys in `localStorage`. This list is verified
+against the constants in `src/contexts/WalletContext.tsx`, `src/lib/theme.ts`,
+and `src/lib/lastTipAmount.ts`.
+
+| Key | Contents | Removed by | Sensitive? |
+|---|---|---|---|
+| `novatip_jwt` | Session JWT issued by the backend after wallet sign-in (SIWS). Used to authenticate creator dashboard requests. | Session expiry (detected client-side), any 401 response from the backend, or explicit disconnect. | **Yes** — grants read access to the creator's dashboard. Does not control funds or allow writes without a fresh wallet signature. |
+| `novatip_pk` | Connected wallet's public key (Stellar address). Identifies which account is connected for tipping and dashboard access. | Explicit disconnect or any 401 response. | No — public keys are inherently public. |
+| `novatip_theme` | User's explicit theme preference: `"light"`, `"dark"`, or absent (meaning "system"). | Switching back to system preference removes the key. | No. |
+| `novatip_last_tip_amount` | The last amount entered in the tip picker. Pre-fills the amount field on the next visit. | Never removed automatically. Invalid values (non-numeric, exceeds ceiling) are ignored on read. | No. |
+
+### Which keys to clear when debugging
+
+- **Stuck session or "unauthorized" loop:** Clear `novatip_jwt`. The next connect
+  will generate a fresh session.
+- **Testing a first-time visitor:** Clear all four keys. This resets the app to
+  the state of someone who has never connected or visited before.
+- **Freighter account mismatch errors:** Clear `novatip_pk` and `novatip_jwt`,
+  then reconnect with the correct account active in Freighter.
+
+### Sensitive data and session security
+
+Only `novatip_jwt` holds anything sensitive. See the [Session token storage:
+localStorage and its tradeoffs](#session-token-storage-localstorage-and-its-tradeoffs)
+section for why the session is stored in `localStorage` instead of an `httpOnly`
+cookie, what risks that carries, and what limits the damage.
 
 ---
 
