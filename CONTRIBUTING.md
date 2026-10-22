@@ -66,6 +66,34 @@ Before opening a pull request, check off each of the following:
 - Use [conventional commits](https://novatip-docs.pages.dev/contributing):
   `feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`
 
+## Keeping your branch up to date
+
+This repository requires branches to be up to date with `main` before merging.
+If other pull requests merge after yours is opened, GitHub will block your PR
+with a message saying the branch is out of date.
+
+This requirement exists to ensure CI runs against the latest codebase. Without
+it, two passing PRs could introduce conflicts or break the build when merged
+together, even though each passed CI individually.
+
+### Updating your branch
+
+**One-click update (GitHub UI):**
+
+Click the "Update branch" button on your pull request page. GitHub will merge
+the latest `main` into your branch automatically.
+
+**Command line:**
+
+```bash
+git checkout your-branch-name
+git fetch upstream
+git merge upstream/main
+git push
+```
+
+After updating, CI will run again and must pass before the PR can merge.
+
 ## Reporting security issues
 
 Do not open a public issue. See
