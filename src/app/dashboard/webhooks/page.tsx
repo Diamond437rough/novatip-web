@@ -26,7 +26,7 @@ interface Webhook {
   enabled: boolean;
 }
 
-function isValidHttpsUrl(value: string): boolean {
+export function isValidHttpsUrl(value: string): boolean {
   try {
     const u = new URL(value);
     return u.protocol === "https:";
