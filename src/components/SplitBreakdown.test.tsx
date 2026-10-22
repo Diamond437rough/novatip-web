@@ -11,11 +11,17 @@
  * empty or missing list.
  */
 
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import { SplitBreakdown } from "./SplitBreakdown";
 
 afterEach(cleanup);
+
+// Mock the wallet context
+const mockWallet = { publicKey: null, isConnected: false };
+vi.mock("@/contexts/WalletContext", () => ({
+  useWallet: () => mockWallet,
+}));
 
 // Both are 56-character Stellar addresses, so shortenAddress has something to
 // shorten rather than returning them unchanged.
@@ -70,5 +76,45 @@ describe("SplitBreakdown", () => {
     expect(
       screen.getByRole("list", { name: "Split breakdown" }),
     ).toBeInTheDocument();
+  });
+
+  it("marks your own address with a 'You' label when wallet is connected", () => {
+    mockWallet.publicKey = CREATOR;
+    mockWallet.isConnected = true;
+
+    render(
+      <SplitBreakdown
+        splits={[
+          { to: CREATOR, bps: 7000 },
+          { to: COLLAB, bps: 3000 },
+        ]}
+      />,
+    );
+
+    const rows = screen.getAllByRole("listitem");
+    expect(rows[0]).toHaveTextContent("You");
+    expect(rows[1]).not.toHaveTextContent("You");
+
+    // Reset for other tests
+    mockWallet.publicKey = null;
+    mockWallet.isConnected = false;
+  });
+
+  it("does not show 'You' label when wallet is not connected", () => {
+    mockWallet.publicKey = null;
+    mockWallet.isConnected = false;
+
+    render(
+      <SplitBreakdown
+        splits={[
+          { to: CREATOR, bps: 7000 },
+          { to: COLLAB, bps: 3000 },
+        ]}
+      />,
+    );
+
+    const rows = screen.getAllByRole("listitem");
+    expect(rows[0]).not.toHaveTextContent("You");
+    expect(rows[1]).not.toHaveTextContent("You");
   });
 });

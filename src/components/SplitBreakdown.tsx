@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * SplitBreakdown.tsx
  *
@@ -10,31 +12,42 @@
 import { shortenAddress } from "@novatip/sdk";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { formatBps } from "@/lib/splits";
+import { useWallet } from "@/contexts/WalletContext";
 
 interface SplitBreakdownProps {
   splits: Array<{ to: string; bps: number }>;
 }
 
 export function SplitBreakdown({ splits }: SplitBreakdownProps) {
+  const { publicKey } = useWallet();
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Where tips go</CardTitle>
       </CardHeader>
       <ul className="space-y-3" aria-label="Split breakdown">
-        {splits.map((split, i) => (
-          <li key={`${split.to}-${i}`} className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-brand-500/20 flex items-center justify-center shrink-0">
-              <span className="text-xs">👤</span>
-            </div>
-            <span className="flex-1 min-w-0 font-mono text-sm text-fg-subtle truncate">
-              {shortenAddress(split.to)}
-            </span>
-            <span className="text-sm font-semibold text-fg shrink-0">
-              {formatBps(split.bps)}
-            </span>
-          </li>
-        ))}
+        {splits.map((split, i) => {
+          const isYou = publicKey && split.to === publicKey;
+          return (
+            <li key={`${split.to}-${i}`} className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-brand-500/20 flex items-center justify-center shrink-0">
+                <span className="text-xs">👤</span>
+              </div>
+              <span className="flex-1 min-w-0 font-mono text-sm text-fg-subtle truncate">
+                {shortenAddress(split.to)}
+                {isYou && (
+                  <span className="ml-2 text-xs font-semibold text-brand-500">
+                    You
+                  </span>
+                )}
+              </span>
+              <span className="text-sm font-semibold text-fg shrink-0">
+                {formatBps(split.bps)}
+              </span>
+            </li>
+          );
+        })}
       </ul>
     </Card>
   );
