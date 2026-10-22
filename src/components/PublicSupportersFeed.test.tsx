@@ -25,11 +25,11 @@ const SUPPORTER_B = "GXYZ9876543210ABCDEFGHIJKLMNOPQRSTUVWXYZ0987654321ABCD";
 
 function makeTip(overrides: Partial<PublicTip> = {}): PublicTip {
   return {
-    id:          "tip-1",
+    id: "tip-1",
     fromAddress: SUPPORTER_A,
-    amount:      "50000000", // 5 USDC in stroops
-    message:     "Great work!",
-    ledgerAt:    "2026-10-19T12:00:00Z",
+    amount: "50000000", // 5 USDC in stroops
+    message: "Great work!",
+    ledgerAt: "2026-10-19T12:00:00Z",
     ...overrides,
   };
 }
@@ -54,10 +54,10 @@ describe("PublicSupportersFeed – populated list", () => {
         tips={[
           makeTip(),
           makeTip({
-            id:          "tip-2",
+            id: "tip-2",
             fromAddress: SUPPORTER_B,
-            amount:      "12500000", // 1.25 USDC
-            message:     "Keep building",
+            amount: "12500000", // 1.25 USDC
+            message: "Keep building",
           }),
         ]}
       />,
@@ -99,5 +99,26 @@ describe("PublicSupportersFeed – populated list", () => {
 
     // No stray opening/closing quote marks left behind by an empty message.
     expect(container.textContent).not.toMatch(/[“”]/);
+  });
+});
+
+describe("PublicSupportersFeed – malformed amounts", () => {
+  it("skips a tip with an unparseable amount while rendering the rest of the list", () => {
+    render(
+      <PublicSupportersFeed
+        tips={[
+          makeTip({ id: "tip-good-1", amount: "50000000" }),
+          makeTip({ id: "tip-bad", amount: "not-a-number", fromAddress: SUPPORTER_B }),
+          makeTip({ id: "tip-good-2", amount: "12500000", fromAddress: SUPPORTER_B, message: "" }),
+        ]}
+      />,
+    );
+
+    // The valid tips are still shown.
+    expect(screen.getByText("$5.00 USDC")).toBeInTheDocument();
+    expect(screen.getByText("$1.25 USDC")).toBeInTheDocument();
+
+    // Only the two valid rows are in the list — the bad one is skipped.
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
   });
 });

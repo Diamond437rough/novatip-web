@@ -20,7 +20,7 @@ afterEach(cleanup);
 // Both are 56-character Stellar addresses, so shortenAddress has something to
 // shorten rather than returning them unchanged.
 const CREATOR = "GBOUUKWI3SUIIL75NEZMVYLYU77SIXNN2RNYMNJOJX6WXOICMMAKKKB4";
-const COLLAB  = "GBASZB2BGT6WYIQ57PSXBNLK5PUH5W3ASRUS4DZHHHJW3YQ5ZWGASJJ5";
+const COLLAB = "GBASZB2BGT6WYIQ57PSXBNLK5PUH5W3ASRUS4DZHHHJW3YQ5ZWGASJJ5";
 
 describe("SplitBreakdown", () => {
   it("renders one row per split", () => {
@@ -49,10 +49,10 @@ describe("SplitBreakdown", () => {
     const rows = screen.getAllByRole("listitem");
 
     expect(rows[0]).toHaveTextContent("GBOU…KKB4");
-    expect(rows[0]).toHaveTextContent("70.0%");
+    expect(rows[0]).toHaveTextContent("70%");
 
     expect(rows[1]).toHaveTextContent("GBAS…SJJ5");
-    expect(rows[1]).toHaveTextContent("30.0%");
+    expect(rows[1]).toHaveTextContent("30%");
   });
 
   it("shows a single-recipient jar as one row at 100%", () => {
@@ -61,7 +61,7 @@ describe("SplitBreakdown", () => {
     const rows = screen.getAllByRole("listitem");
     expect(rows).toHaveLength(1);
     expect(rows[0]).toHaveTextContent("GBOU…KKB4");
-    expect(rows[0]).toHaveTextContent("100.0%");
+    expect(rows[0]).toHaveTextContent("100%");
   });
 
   it("labels the list for assistive technology", () => {
