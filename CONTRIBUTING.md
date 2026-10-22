@@ -57,6 +57,7 @@ Before opening a pull request, check off each of the following:
 - [ ] **Both themes**: UI changes have been checked in both light and dark themes.
 - [ ] **Narrow viewport**: UI changes have been verified on a narrow (mobile) viewport.
 - [ ] **Design tokens**: Styling uses design tokens rather than raw palette classes.
+- [ ] **Changelog entry**: User-visible changes (new features, bug fixes, breaking changes) include an entry in the `Unreleased` section of `CHANGELOG.md`.
 
 ## Opening a pull request
 
