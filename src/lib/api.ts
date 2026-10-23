@@ -188,6 +188,8 @@ export interface CreatorProfile {
   displayName: string | null;
   bio:         string | null;
   avatarUrl:   string | null;
+  /** Address tip-received emails are sent to. Null means notifications are off. */
+  email:       string | null;
   jarId:       string;
   splits:      Array<{ to: string; bps: number }>;
   createdAt:   string;
@@ -213,7 +215,7 @@ export const creatorApi = {
 
   updateProfile: (
     jwt: string,
-    data: { displayName?: string; bio?: string; avatarUrl?: string },
+    data: { displayName?: string; bio?: string; avatarUrl?: string; email?: string | null },
     options?: RequestOptions,
   ) =>
     request<{ creator: CreatorProfile }>("/creators/me", {
