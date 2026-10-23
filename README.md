@@ -6,7 +6,7 @@ Next.js 14 frontend for Novatip.
 Next.js 14 App Router, TypeScript 5, Tailwind CSS 3, Freighter via @novatip/sdk, qrcode.react, canvas-confetti, React context.
 
 ## Local Development
-Prerequisites: Node.js >= 18, novatip-backend on port 3001, Freighter browser extension.
+Prerequisites: Node.js >= 18, novatip-backend on port 3001, Freighter browser extension
 
     npm install
     cp .env.example .env.local
@@ -727,8 +727,9 @@ Notice:
     npm run typecheck - tsc --noEmit
     npm run lint      - eslint
     npm run format    - prettier
-    npm test          - run tests once (Vitest)
-    npm run test:watch - run tests in watch mode
+    npm test               - run tests once (Vitest)
+    npm run test:watch     - run tests in watch mode
+    npm run test:coverage  - run tests with v8 coverage report
 
 ## Testing
 
@@ -736,8 +737,14 @@ The project uses [Vitest](https://vitest.dev) with [React Testing Library](https
 
 **Running tests**
 
-    npm test            # single run, exits with pass/fail
-    npm run test:watch  # watch mode — re-runs on file changes
+    npm test                # single run, exits with pass/fail
+    npm run test:watch      # watch mode — re-runs on file changes
+    npm run test:coverage   # single run with v8 coverage report (text + lcov)
+
+Coverage output goes to `coverage/`. The lcov report (`coverage/lcov.info`) is
+consumed by editor plugins and CI coverage services. Requires
+`@vitest/coverage-v8` which is listed in `devDependencies`; run `npm install`
+before the first coverage run.
 
 **Writing tests**
 
